@@ -143,44 +143,6 @@ namespace Commander
 
         }
 
-
-        public void RegisterAllCommands()
-        {
-            string path = Application.dataPath + "/GameMain/LauncherAssets/GMCommand.txt";
-            string[] lines = File.ReadAllLines(path, Encoding.Unicode);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                line = line.Replace("\"", "");
-                string[] items = line.Split('\t');
-                string command = items[2];
-                string name = items[0];
-                string formatStr = items[3];
-                string comment = items[1];
-                //处理formatStr
-                Regex reg = new Regex(@"\{[0-9]{1,2}\}");
-                int maxArgsCount = reg.Matches(formatStr).Count;
-
-                Func<List<string>, bool> callbackGM = (List<string> argsList) =>
-                {
-                    //TODO
-                    return true;
-                };
-
-                Func<List<string>, bool> callbackLua = (List<string> argsList) =>
-                {
-                    return true;
-                };
-
-                Func<List<string>, bool> callback = callbackGM;
-                if(command.Contains("$$"))
-                {
-                    callback = callbackLua;
-                }
-                this.RegisterCommand(command, callback, name, comment, maxArgsCount);
-            }
-        }
-
         private Color GetLogColor(LogType type)
         {
             Color color = Color.white;
@@ -213,33 +175,32 @@ namespace Commander
         }
 
         private List<CommandData> _cacheList = new List<CommandData>();
-        public bool ExcuteCommand(string command)
+        public bool ExcuteCommand(string cmdText)
         {
             _cacheList.Clear();
-            command = command.Trim();
+            cmdText = cmdText.Trim();
             bool result = false;
-            string[] arr = command.Split(' ');
-            if(arr.Length == 0)
+            string[] strArray = cmdText.Split(' ');
+            if(strArray.Length == 0)
             {
                 return false;
             }
             List<string> args = new List<string>();
-            for (int i = 0; i < arr.Length; i++)
+            for (int i = 0; i < strArray.Length; i++)
             {
-                if(!string.IsNullOrEmpty(arr[i]))
+                if(!string.IsNullOrEmpty(strArray[i]))
                 {
-                    args.Add(arr[i]);
+                    args.Add(strArray[i]);
                 }
             }
             bool commandExists = false;
-
 
             if (commandExists==false)
             {
                 for (int i = 0; i < _commandList.Count; i++)
                 {
                     CommandData cmd = _commandList[i];
-                    if (cmd.cmd == arr[0])
+                    if (cmd.cmd == strArray[0])
                     {
                         if (args.Count == cmd.argsCount + 1)
                         {
@@ -251,17 +212,20 @@ namespace Commander
             }
             if(commandExists==false)
             {
-                if(command.Contains("$$"))
+                if(cmdText.Contains("$$"))
                 {
                     //this.AddLog("前端Lua指令 = " + command);
-                    this.AddLog(command);
+                    //GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("前端Lua指令 = " + command);
+                    cmdText = cmdText.Replace("$$", "");
+                    this.AddLog(cmdText);
                 }
                 else
                 {
                     //this.AddLog(string.Format("\"{0}\" 没有配置 或参数个数不匹配", command), LogType.Warning);
                     //this.AddLog("已发送~~~");
                     //-----------------------------手动输入GM指令----------------------------------
-                    this.AddLog(command);
+                    this.AddLog(cmdText);
+                    result = true;
                 }
             }
             else
@@ -279,7 +243,7 @@ namespace Commander
                     result = targetCmd.Method(args);
                     if(result)
 					{
-                        this.AddLog(command);
+                        this.AddLog(cmdText);
                     }
                 }
             }
@@ -289,7 +253,7 @@ namespace Commander
             }
             else
             {
-                this.AddHistoryCommand(command);
+                this.AddHistoryCommand(cmdText);
             }
             _cacheList.Clear();
             return result;
@@ -297,6 +261,11 @@ namespace Commander
 
         private void AddHistoryCommand(string command)
         {
+            int nIndex = _historyList.IndexOf(command);
+            if (nIndex>=0)
+			{
+                _historyList.RemoveAt(nIndex);
+			}
             _historyList.Insert(0, command);
             if(_historyList.Count > 10)
             {
@@ -305,32 +274,6 @@ namespace Commander
             _historyIndex = -1;
         }
 
-        private string FormateParams(string command)
-		{
-            command = command.Trim();
-            if(string.IsNullOrEmpty(command))
-			{
-                return command;
-			}
-            if (command.Contains("="))
-			{
-                return command;
-			}
-            //int index = command.IndexOf(" ");
-
-            for (int index = 0; index < command.Length;  index++)
-            {
-                if(index>0 && index < command.Length-1)
-				{
-					if (command[index].ToString() == " " && command[index+1].ToString()!="=")
-					{
-                        command = command.Insert(index+1, "=");
-                    }
-				}
-                
-            }
-				return command;
-        }
         private string GetCurrentCommand()
         {
             if(_historyList.Count == 0)

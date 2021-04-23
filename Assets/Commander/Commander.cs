@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace Commander
 {
-    //add this component
     public class Commander : MonoBehaviour
     {
         public enum State
@@ -29,7 +28,6 @@ namespace Commander
         float InputContrast = 0.0f;
         float InputAlpha = 0.5f;
 
-        //Color BackgroundColor = new Color(0.16f, 0.16f, 0.16f, 0.5f); //灰色底
         Color BackgroundColor = new Color(0f, 0f, 0f, 0.5f);
         Color BackgroundSelectColor = new Color(0, 0, 0, 0.5f);
         Color ForegroundColor = Color.white;
@@ -59,7 +57,10 @@ namespace Commander
         Texture2D select_label_background_texture; //下拉列表选装的背景颜色
         Texture2D input_background_texture;
 
-        const string line = "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+        const string line = "--------------------------------------------------------------------------------------" +
+            "------------------------------------------------------------------------------------------------------" +
+            "------------------------------------------------------------------------------------------------------" +
+            "------------------------------------------------------------------------------------------------------";
         Rect selectListWindow;
         private int m_SelectIndex = 0;
         GUIStyle select_window_style;
@@ -74,7 +75,6 @@ namespace Commander
             InitUI();
 
             CommandManager.Instance.RegisterDefaultCommands();
-            //CommandManager.Instance.RegisterAllCommands();
             command_text = "";
             cached_command_text = command_text;
         }
@@ -113,12 +113,7 @@ namespace Commander
             label_style.alignment = TextAnchor.MiddleLeft;
 
             select_label_background_texture = new Texture2D(1, 1);
-            //select_label_background_texture.SetPixel(0, 0, new Color(245/ 255f, 245/255f, 245/255f, 0.5f)); //
             select_label_background_texture.SetPixel(0, 0, new Color(135f/255, 206/255f, 235/255f, 0.5f)); //天空蓝
-            //select_label_background_texture.SetPixel(0, 0, new Color(1f, 1f, 1f, 0.5f)); //白底
-            //select_label_background_texture.SetPixel(0, 0, new Color(0, 1f, 1f, 0.5f)); //蓝绿色
-            //select_label_background_texture.SetPixel(0, 0, new Color(0.690f, 0.768f, 0.870f, 0.7f));  灰蓝色
-            //select_label_background_texture.SetPixel(0, 0, new Color(0.745f, 0.745f, 0.745f, 0.8f)); 灰色
             select_label_background_texture.Apply();
             label_select_style = new GUIStyle();
             label_select_style.font = ConsoleFont;
@@ -192,7 +187,7 @@ namespace Commander
 
 			if (selectCommandList.Count > 0)
 			{
-				m_SelectIndex = 0; //输入框有改变 默认选中第一个
+				m_SelectIndex = 0; 
 			}
 			else
 			{
@@ -201,7 +196,6 @@ namespace Commander
 
 		}
 
-        //显示选择列表界面
         void ShowSelectWindow()
 		{
 			if (selectCommandList.Count == 0)
@@ -219,7 +213,6 @@ namespace Commander
 			selectListWindow = GUILayout.Window(89, selectListWindow, DrawSelectList, "", select_window_style);
 		}
 
-        //绘制选择列表
         void DrawSelectList(int Window2D)
         {
             GUILayout.BeginVertical();
@@ -256,7 +249,6 @@ namespace Commander
             editor_state = null;
             if (_state == State.Open)
             {
-                //CommandManager.Instance.RegisterFavouriteCommands();
                 open_target = Screen.height;
                 real_window_size = open_target;
                 scroll_position.y = int.MaxValue;
@@ -313,7 +305,6 @@ namespace Commander
 				if (m_SelectIndex != -1)
                 {
                     move_cursor = true;
-                    //将选中的文本复制到输入框
                     command_text = selectCommandList[m_SelectIndex].cmd;
                     m_SelectIndex = -1;
 					m_NeedUpdateSelectList = false;
@@ -334,7 +325,8 @@ namespace Commander
                     bFnidHistory = true;
 					m_NeedUpdateSelectList = false;
 					m_ShowSelectWindow = false;
-				}
+                    m_SelectIndex = -1;
+                }
                 else
                 {
                     m_SelectIndex--;
@@ -353,7 +345,8 @@ namespace Commander
                     bFnidHistory = true;
 					m_NeedUpdateSelectList = false;
 					m_ShowSelectWindow = false;
-				}
+                    m_SelectIndex = -1;
+                }
                 else
                 {
                     m_SelectIndex++;
@@ -377,7 +370,6 @@ namespace Commander
 			}
 			else if (Event.current.Equals(Event.KeyboardEvent("tab")))
             {
-                //CompleteCommand();
                 move_cursor = true;
             }
 
@@ -396,7 +388,6 @@ namespace Commander
             {
                 old_command_text = command_text;
 
-                //没有按回车键的情况下 需要更新选择列表
                 if(ClickEnterBtn==false && bFnidHistory == false)
 				{
                     m_NeedUpdateSelectList = true;
@@ -431,7 +422,6 @@ namespace Commander
 			}
 		}
 
-        //光标移动到末尾
 		void CursorToEnd()
 		{
 			if (editor_state == null)

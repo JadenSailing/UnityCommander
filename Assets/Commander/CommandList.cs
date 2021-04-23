@@ -10,21 +10,21 @@ namespace Commander
 {
     public static class CommandList
     {
-		[EditorCommand("quit", "退出", "")]
+		[EditorCommand("quit", "退出", "停止运行Unity程序")]
         static bool SystemCommand_Quit(List<string> args)
         {
             UnityEditor.EditorApplication.isPlaying = false;
             return true;
         }
 
-        [EditorCommand("clear", "清屏", "")]
+        [EditorCommand("clear", "清屏", "清空当前屏幕")]
         static bool SystemCommand_Clear(List<string> args)
         {
             CommandManager.Instance.GetLogs().Clear();
             return true;
         }
 
-        [EditorCommand("history", "历史指令", "")]
+        [EditorCommand("history", "历史指令", "显示历史指令")]
         static bool SystemCommand_History(List<string> args)
         {
             List<string> history = CommandManager.Instance.GetHistory();
@@ -35,7 +35,7 @@ namespace Commander
             return false;
         }
 
-        [EditorCommand("help", "帮助", "")]
+        [EditorCommand("help", "帮助", "显示帮助")]
         static bool SystemCommand_Help(List<string> args)
         {
             CommandManager.Instance.AddLog("帮助说明:");
