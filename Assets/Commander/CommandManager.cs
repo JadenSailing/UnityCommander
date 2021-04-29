@@ -224,7 +224,7 @@ namespace Commander
             }
             if(commandExists==false)
             {
-                this.AddLog(string.Format("\"{0}\" 没有配置 或参数个数不匹配", cmdText), LogType.Warning);
+                this.AddLog(string.Format("\"{0}\" command not exists or args count not match", cmdText), LogType.Warning);
                 result = false;
             }
             else
@@ -243,7 +243,7 @@ namespace Commander
                     closeConcolse = targetCmd.closeConcole;
                     if(!result)
                     {
-                        this.AddLog(string.Format("\"{0}\"执行失败", cmdText), LogType.Warning);
+                        this.AddLog(string.Format("Excute \"{0}\" failed", cmdText), LogType.Warning);
                     }
                 }
             }

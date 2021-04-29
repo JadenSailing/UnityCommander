@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Commander
 {
+    //add this component
     public class Commander : MonoBehaviour
     {
         public enum State
