@@ -17,14 +17,14 @@ namespace Commander
             return true;
         }
 
-        [EditorCommand("clear", "清屏", "清空当前屏幕")]
+        [EditorCommand("clear", "清屏", "清空当前屏幕", 0, false)]
         static bool SystemCommand_Clear(List<string> args)
         {
             CommandManager.Instance.GetLogs().Clear();
             return true;
         }
 
-        [EditorCommand("history", "历史指令", "显示历史指令")]
+        [EditorCommand("history", "历史指令", "显示历史指令", 0, false)]
         static bool SystemCommand_History(List<string> args)
         {
             List<string> history = CommandManager.Instance.GetHistory();
@@ -32,10 +32,10 @@ namespace Commander
             {
                 CommandManager.Instance.AddLog("> " + history[i]);
             }
-            return false;
+            return true;
         }
 
-        [EditorCommand("help", "帮助", "显示帮助")]
+        [EditorCommand("help", "帮助", "显示帮助", 0, false)]
         static bool SystemCommand_Help(List<string> args)
         {
             CommandManager.Instance.AddLog("帮助说明:");
@@ -46,7 +46,7 @@ namespace Commander
             CommandManager.Instance.AddLog("quit 停止Unity");
             CommandManager.Instance.AddLog("clear 清屏");
             CommandManager.Instance.AddLog("history 显示历史指令");
-            return false;
+            return true;
         }
 
     }

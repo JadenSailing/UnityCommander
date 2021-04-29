@@ -42,12 +42,19 @@ namespace Commander
             set;
         }
 
-        public EditorCommandAttribute(string cmd, string name, string comment = "", int argsCount = 0)
+        public bool CloseConcole
+        {
+            get;
+            set;
+        }
+
+        public EditorCommandAttribute(string cmd, string name, string comment = "", int argsCount = 0, bool closeConcole = true)
         {
             this.Cmd = cmd;
             this.Name = name;
             this.Comment = comment;
             this.ArgsCount = argsCount;
+            this.CloseConcole = closeConcole;
         }
     }
 
@@ -59,6 +66,7 @@ namespace Commander
         public string Comment;
         public Func<List<string>, bool> Method;
         public int argsCount = 0;
+        public bool closeConcole = true;
         public string format = "";
         public List<string> gmList = new List<string>();
 
@@ -108,7 +116,8 @@ namespace Commander
             }
         }
 
-        public void RegisterCommand(string cmd, Func<List<string>, bool> method, string name = "", string comment = "", int argsCount = 0, string format = "", CommandType type = CommandType.GM)
+        public void RegisterCommand(string cmd, Func<List<string>, bool> method, string name = "",
+            string comment = "", int argsCount = 0, bool closeConcole = true, string format = "", CommandType type = CommandType.GM)
         {
             CommandData command = new CommandData();
             command.cmd = cmd;
@@ -117,6 +126,7 @@ namespace Commander
             command.Type = CommandType.GM;
             command.Method = method;
             command.argsCount = argsCount;
+            command.closeConcole = closeConcole;
             command.format = format;
             _commandList.Add(command);
         }
@@ -137,7 +147,7 @@ namespace Commander
                     ParameterInfo[] methods_params = method.GetParameters();
                     Func<List<string>, bool> action = (Func<List<string>, bool>)Delegate.CreateDelegate(typeof(Func<List<string>, bool>), method);
 
-                    this.RegisterCommand(attribute.Cmd, action, attribute.Name, attribute.Comment, attribute.ArgsCount);
+                    this.RegisterCommand(attribute.Cmd, action, attribute.Name, attribute.Comment, attribute.ArgsCount, attribute.CloseConcole);
                 }
             }
 
@@ -177,6 +187,7 @@ namespace Commander
         private List<CommandData> _cacheList = new List<CommandData>();
         public bool ExcuteCommand(string cmdText)
         {
+            this.AddLog(cmdText, LogType.Warning);
             _cacheList.Clear();
             cmdText = cmdText.Trim();
             bool result = false;
@@ -194,6 +205,7 @@ namespace Commander
                 }
             }
             bool commandExists = false;
+            bool closeConcolse = true;
 
             if (commandExists==false)
             {
@@ -212,21 +224,8 @@ namespace Commander
             }
             if(commandExists==false)
             {
-                if(cmdText.Contains("$$"))
-                {
-                    //this.AddLog("前端Lua指令 = " + command);
-                    //GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("前端Lua指令 = " + command);
-                    cmdText = cmdText.Replace("$$", "");
-                    this.AddLog(cmdText);
-                }
-                else
-                {
-                    //this.AddLog(string.Format("\"{0}\" 没有配置 或参数个数不匹配", command), LogType.Warning);
-                    //this.AddLog("已发送~~~");
-                    //-----------------------------手动输入GM指令----------------------------------
-                    this.AddLog(cmdText);
-                    result = true;
-                }
+                this.AddLog(string.Format("\"{0}\" 没有配置 或参数个数不匹配", cmdText), LogType.Warning);
+                result = false;
             }
             else
             {
@@ -241,22 +240,23 @@ namespace Commander
                 if(targetCmd != null)
                 {
                     result = targetCmd.Method(args);
-                    if(result)
-					{
-                        this.AddLog(cmdText);
+                    closeConcolse = targetCmd.closeConcole;
+                    if(!result)
+                    {
+                        this.AddLog(string.Format("\"{0}\"执行失败", cmdText), LogType.Warning);
                     }
                 }
             }
             if(!result)
             {
-                //this.AddLog(string.Format("\"{0}\"执行失败", command), LogType.Warning);
+                closeConcolse = false;
             }
             else
             {
                 this.AddHistoryCommand(cmdText);
             }
             _cacheList.Clear();
-            return result;
+            return closeConcolse;
         }
 
         private void AddHistoryCommand(string command)

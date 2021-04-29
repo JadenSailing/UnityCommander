@@ -11,7 +11,6 @@ namespace Commander
             Open,
             Close
         }
-        string InputCaret = ">";
 
         public static class KeyEvent
         {
@@ -23,39 +22,27 @@ namespace Commander
             public static Event Tab = Event.KeyboardEvent("tab");
         }
 
+        string InputCaret = ">";
         Font ConsoleFont;
-
-        float InputContrast = 0.0f;
-        float InputAlpha = 0.5f;
-
-        Color BackgroundColor = new Color(0f, 0f, 0f, 0.5f);
-        Color BackgroundSelectColor = new Color(0, 0, 0, 0.5f);
-        Color ForegroundColor = Color.white;
-        Color InputColor = Color.cyan;
-
         private State _state = State.Close;
-
         private bool m_NeedUpdateSelectList = false;
         private bool m_ShowSelectWindow = false;
         TextEditor editor_state;
         bool input_fix;
         bool move_cursor;
-        bool initial_open;
         Rect window;
         float open_target;
         float real_window_size;
         string old_command_text; //上次的输入文本
         string command_text; //当前的输入文本
-        string cached_command_text;
+        string default_command_text = ""; //清空后的默认文本
         Vector2 scroll_position;
         GUIStyle window_style;
         GUIStyle label_style;
         GUIStyle label_select_style;
         GUIStyle input_style;
         Texture2D background_texture;
-        Texture2D select_background_texture;
         Texture2D select_label_background_texture; //下拉列表选装的背景颜色
-        Texture2D input_background_texture;
 
         const string line = "--------------------------------------------------------------------------------------" +
             "------------------------------------------------------------------------------------------------------" +
@@ -63,7 +50,6 @@ namespace Commander
             "------------------------------------------------------------------------------------------------------";
         Rect selectListWindow;
         private int m_SelectIndex = 0;
-        GUIStyle select_window_style;
         List<CommandData> selectCommandList = new List<CommandData>();
 
         void Start()
@@ -76,7 +62,6 @@ namespace Commander
 
             CommandManager.Instance.RegisterDefaultCommands();
             command_text = "";
-            cached_command_text = command_text;
         }
 
         void InitUI()
@@ -87,28 +72,18 @@ namespace Commander
             }
 
             background_texture = new Texture2D(1, 1);
-            background_texture.SetPixel(0, 0, BackgroundColor);
+            background_texture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.5f));
             background_texture.Apply();
 
             window_style = new GUIStyle();
             window_style.normal.background = background_texture;
             window_style.padding = new RectOffset(4, 4, 4, 4);
-            window_style.normal.textColor = ForegroundColor;
+            window_style.normal.textColor = Color.white;
             window_style.font = ConsoleFont;
-
-            select_background_texture = new Texture2D(1, 1);
-            select_background_texture.SetPixel(0, 0, BackgroundSelectColor);
-            select_background_texture.Apply();
-            
-            select_window_style = new GUIStyle();
-            select_window_style.normal.background = select_background_texture;
-            select_window_style.padding = new RectOffset(4, 4, 4, 4);
-            select_window_style.normal.textColor = ForegroundColor;
-            select_window_style.font = ConsoleFont;
 
             label_style = new GUIStyle();
             label_style.font = ConsoleFont;
-            label_style.normal.textColor = ForegroundColor;
+            label_style.normal.textColor = Color.white;
             label_style.wordWrap = false;
             label_style.alignment = TextAnchor.MiddleLeft;
 
@@ -126,18 +101,8 @@ namespace Commander
             input_style.padding = new RectOffset(4, 4, 4, 4);
             input_style.font = ConsoleFont;
             input_style.fixedHeight = ConsoleFont.fontSize * 1.6f;
-            input_style.normal.textColor = InputColor;
-
-            var dark_background = new Color();
-            dark_background.r = BackgroundColor.r - InputContrast;
-            dark_background.g = BackgroundColor.g - InputContrast;
-            dark_background.b = BackgroundColor.b - InputContrast;
-            dark_background.a = InputAlpha;
-
-            input_background_texture = new Texture2D(1, 1);
-            input_background_texture.SetPixel(0, 0, dark_background);
-            input_background_texture.Apply();
-            input_style.normal.background = input_background_texture;
+            input_style.normal.textColor = Color.cyan;
+            input_style.normal.background = background_texture;
         }
 
 #if UNITY_EDITOR
@@ -160,7 +125,6 @@ namespace Commander
             }
             window = GUILayout.Window(88, window, DrawConsole, "", window_style);
             this.CheckSelectList();
-
             if(m_ShowSelectWindow)
 			{
                 ShowSelectWindow();
@@ -210,7 +174,7 @@ namespace Commander
 
 			float realHeight = (selectCommandList.Count + 1) * (ConsoleFont.fontSize + 4);
 			selectListWindow = new Rect(0, open_target - realHeight - 40, Screen.width, realHeight);
-			selectListWindow = GUILayout.Window(89, selectListWindow, DrawSelectList, "", select_window_style);
+			selectListWindow = GUILayout.Window(89, selectListWindow, DrawSelectList, "", window_style);
 		}
 
         void DrawSelectList(int Window2D)
@@ -243,7 +207,6 @@ namespace Commander
         {
             _state = state;
             command_text = "";
-            initial_open = true;
             input_fix = true;
             selectCommandList.Clear();
             editor_state = null;
@@ -277,8 +240,8 @@ namespace Commander
                 DrawLogs();
             }
             GUILayout.EndScrollView();
-            bool ClickEnterBtn = false;
-            bool bFnidHistory = false;
+            bool clickEnterBtn = false;
+            bool findHistory = false;
             if (move_cursor)
             {
                 CursorToEnd();
@@ -314,7 +277,7 @@ namespace Commander
                 {
                     EnterCommand();
                 }
-                ClickEnterBtn = true;
+                clickEnterBtn = true;
             }
             else if (IsKeyDown(KeyEvent.Up))
             {
@@ -322,7 +285,7 @@ namespace Commander
                 if(selectCommandList.Count == 0)
                 {
                     command_text = CommandManager.Instance.GetNextCommand();
-                    bFnidHistory = true;
+                    findHistory = true;
 					m_NeedUpdateSelectList = false;
 					m_ShowSelectWindow = false;
                     m_SelectIndex = -1;
@@ -342,7 +305,7 @@ namespace Commander
                 if(selectCommandList.Count == 0)
                 {
                     command_text = CommandManager.Instance.GetPreCommand();
-                    bFnidHistory = true;
+                    findHistory = true;
 					m_NeedUpdateSelectList = false;
 					m_ShowSelectWindow = false;
                     m_SelectIndex = -1;
@@ -388,7 +351,7 @@ namespace Commander
             {
                 old_command_text = command_text;
 
-                if(ClickEnterBtn==false && bFnidHistory == false)
+                if(clickEnterBtn==false && findHistory == false)
 				{
                     m_NeedUpdateSelectList = true;
                     m_ShowSelectWindow = true;
@@ -397,16 +360,11 @@ namespace Commander
 
             if (input_fix && command_text.Length > 0)
             {
-                command_text = cached_command_text;
+                command_text = default_command_text;
                 input_fix = false;                 
             }
 
-                GUI.FocusControl("command_text_field");
-            if (initial_open)
-            {
-                initial_open = false;
-            }
-
+            GUI.FocusControl("command_text_field");
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
