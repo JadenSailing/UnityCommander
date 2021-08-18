@@ -24,6 +24,16 @@ namespace Commander
             return true;
         }
 
+        [EditorCommand("log", "测试log", "单纯测试log用，需要\"log xxx\"", 1, false)]
+        static bool SystemCommand_Log(List<string> args)
+        {
+            if(args.Count > 0)
+            {
+                CommandManager.Instance.AddLog("> " + args[1]);
+            }
+            return true;
+        }
+
         [EditorCommand("history", "历史指令", "显示历史指令", 0, false)]
         static bool SystemCommand_History(List<string> args)
         {
@@ -39,12 +49,13 @@ namespace Commander
         static bool SystemCommand_Help(List<string> args)
         {
             CommandManager.Instance.AddLog("帮助说明:");
-            CommandManager.Instance.AddLog("GM 指令，可在 Assets/GameMain/LauncherAssets/GMCommand.txt 配置");
+            CommandManager.Instance.AddLog("GM 指令");
             CommandManager.Instance.AddLog("\"~\"控制台开关，ESC也可以关闭控制台");
             CommandManager.Instance.AddLog("Tab键或者↑↓箭头可以切换待选列表，然后Enter键选中");
             CommandManager.Instance.AddLog("无待选列表时↑↓箭头可以切换历史命令");
             CommandManager.Instance.AddLog("quit 停止Unity");
             CommandManager.Instance.AddLog("clear 清屏");
+            CommandManager.Instance.AddLog("log 测试log");
             CommandManager.Instance.AddLog("history 显示历史指令");
             return true;
         }
