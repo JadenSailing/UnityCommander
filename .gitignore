@@ -1,6 +1,7 @@
 #################
 ## Unity3D
 #################
+.vs/
 Library/
 Temp/
 Assets/UnityVS/
