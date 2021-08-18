@@ -42,19 +42,12 @@ namespace Commander
             set;
         }
 
-        public bool CloseConcole
-        {
-            get;
-            set;
-        }
-
-        public EditorCommandAttribute(string cmd, string name, string comment = "", int argsCount = 0, bool closeConcole = true)
+        public EditorCommandAttribute(string cmd, string name, string comment = "", int argsCount = 0)
         {
             this.Cmd = cmd;
             this.Name = name;
             this.Comment = comment;
             this.ArgsCount = argsCount;
-            this.CloseConcole = closeConcole;
         }
     }
 
@@ -66,7 +59,6 @@ namespace Commander
         public string Comment;
         public Func<List<string>, bool> Method;
         public int argsCount = 0;
-        public bool closeConcole = true;
         public string format = "";
         public List<string> gmList = new List<string>();
 
@@ -99,7 +91,7 @@ namespace Commander
     {
         private static CommandManager _instance = null;
 
-        private List<CommandData> _commandList = new List<CommandData>();
+        private List<CommandData> m_CommandList = new List<CommandData>();
 
         private List<LogData> _logList = new List<LogData>();
 
@@ -116,8 +108,7 @@ namespace Commander
             }
         }
 
-        public void RegisterCommand(string cmd, Func<List<string>, bool> method, string name = "",
-            string comment = "", int argsCount = 0, bool closeConcole = true, string format = "", CommandType type = CommandType.GM)
+        public void RegisterCommand(string cmd, Func<List<string>, bool> method, string name = "", string comment = "", int argsCount = 0, string format = "", CommandType type = CommandType.GM)
         {
             CommandData command = new CommandData();
             command.cmd = cmd;
@@ -126,9 +117,8 @@ namespace Commander
             command.Type = CommandType.GM;
             command.Method = method;
             command.argsCount = argsCount;
-            command.closeConcole = closeConcole;
             command.format = format;
-            _commandList.Add(command);
+            m_CommandList.Add(command);
         }
 
         public void RegisterDefaultCommands()
@@ -147,10 +137,161 @@ namespace Commander
                     ParameterInfo[] methods_params = method.GetParameters();
                     Func<List<string>, bool> action = (Func<List<string>, bool>)Delegate.CreateDelegate(typeof(Func<List<string>, bool>), method);
 
-                    this.RegisterCommand(attribute.Cmd, action, attribute.Name, attribute.Comment, attribute.ArgsCount, attribute.CloseConcole);
+                    this.RegisterCommand(attribute.Cmd, action, attribute.Name, attribute.Comment, attribute.ArgsCount);
                 }
             }
 
+        }
+
+
+        public void RegisterCommandsGroup()
+        {
+            string path = Application.dataPath + "/GameMain/LauncherAssets/GMCommandGroup.txt";
+            string[] lines = File.ReadAllLines(path, Encoding.Unicode);
+            string command = "";
+            string comment = "";
+            List<string> cmdList = new List<string>();
+            for (int i = 1; i < lines.Length; i++)
+            {
+                if(lines[i].StartsWith("#gms"))
+                {
+                    if(!string.IsNullOrEmpty(command))
+                    {
+                        this.RegisterGroupCommand(command, comment, cmdList);
+                    }
+                    string[] arr = lines[i].Trim().Split('\t');
+                    command = arr[0].Substring(1);
+                    comment = arr[1];
+                    cmdList.Clear();
+                }
+                else
+                {
+                    if(!string.IsNullOrEmpty(command))
+                    {
+                        cmdList.Add(lines[i].Trim());
+                    }
+                }
+            }
+            this.RegisterGroupCommand(command, comment, cmdList);
+        }
+
+        private void RegisterGroupCommand(string command, string comment, List<string> cmdList)
+        {
+            CommandData groupCommand = new CommandData();
+            groupCommand.cmd = command;
+            groupCommand.Comment = comment;
+            for (int gmIndex = 0; gmIndex < cmdList.Count; gmIndex++)
+            {
+                groupCommand.gmList.Add(cmdList[gmIndex].Trim().Trim('\"'));
+            }
+            Func<List<string>, bool> callbackGM = (List<string> argsList) =>
+            {
+                if (groupCommand.Type == CommandType.Group)
+                {
+                    for (int index = 0; index < groupCommand.gmList.Count; index++)
+                    {
+                        //项目内批指令的处理
+                        /*
+                        CGGMCommand request = ReferencePool.Acquire<CGGMCommand>();
+                        string gmCommand = groupCommand.gmList[index];
+                        bool isValid = true;
+                        if (gmCommand.StartsWith("0"))
+                        {
+                            gmCommand = gmCommand.Substring(1);
+                            if (GameEntry.DataCache.Entity.MyPlayerCharacterData.Gender != 0)
+                            {
+                                isValid = false;
+                            }
+                        }
+                        if (gmCommand.StartsWith("1"))
+                        {
+                            gmCommand = gmCommand.Substring(1);
+                            if (GameEntry.DataCache.Entity.MyPlayerCharacterData.Gender != 1)
+                            {
+                                isValid = false;
+                            }
+                        }
+
+                        request.GMCommand = gmCommand;
+                        if (isValid)
+                        {
+                            GameEntry.Network.Send(request);
+                        }
+                        */
+                    }
+                }
+                return true;
+            };
+            groupCommand.Type = CommandType.Group;
+            groupCommand.Method = callbackGM;
+            groupCommand.format = "";
+            groupCommand.argsCount = 0;
+            m_CommandList.Add(groupCommand);
+        }
+
+        public void RegisterAllCommands()
+        {
+            string path = Application.dataPath + "/Commander/GMCommand.txt";
+            string[] lines = File.ReadAllLines(path, Encoding.Unicode);
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                line = line.Replace("\"", "");
+                string[] items = line.Split('\t');
+                string command = items[2];
+                string name = items[0];
+                string formatStr = items[3];
+                string comment = items[1];
+                //处理formatStr
+                Regex reg = new Regex(@"\{[0-9]{1,2}\}");
+                int maxArgsCount = reg.Matches(formatStr).Count;
+
+                Func<List<string>, bool> callbackGM = (List<string> argsList) =>
+                {
+                    //项目内发往服务器的指令
+                    /*
+                    CGGMCommand request = ReferencePool.Acquire<CGGMCommand>();
+                    string gmCommand = command;
+                    if(string.IsNullOrEmpty(formatStr))
+                    {
+                        gmCommand = command;
+                    }
+                    else
+                    {
+                        gmCommand = formatStr;
+                        string[] args = new string[maxArgsCount];
+                        for (int j = 0; j < args.Length; j++)
+                        {
+                            args[j] = argsList[j + 1];
+                        }
+                        gmCommand = string.Format(formatStr, args);
+                    }
+                    request.GMCommand = gmCommand;
+                    GameEntry.Network.Send(request);
+                    */
+                    return true;
+                };
+
+                Func<List<string>, bool> callbackLua = (List<string> argsList) =>
+                {
+                    //int luaValue = 0;
+                    //if(argsList.Count > 1)
+                    //{
+                    //    int.TryParse(argsList[1], out luaValue);
+                    //}
+                    command = command.Replace("$$", "");
+                    //项目内调用Lua的指令
+                    //GameEntry.Lua.CallLuaGM(command);
+                    return true;
+                };
+
+                Func<List<string>, bool> callback = callbackGM;
+                if(command.Contains("$$"))
+                {
+                    callback = callbackLua;
+                }
+                this.RegisterCommand(command, callback, name, comment, maxArgsCount);
+            }
         }
 
         private Color GetLogColor(LogType type)
@@ -185,9 +326,8 @@ namespace Commander
         }
 
         private List<CommandData> _cacheList = new List<CommandData>();
-        public bool ExcuteCommand(string cmdText)
+        public bool ExecuteCommand(string cmdText)
         {
-            this.AddLog(cmdText, LogType.Warning);
             _cacheList.Clear();
             cmdText = cmdText.Trim();
             bool result = false;
@@ -205,13 +345,25 @@ namespace Commander
                 }
             }
             bool commandExists = false;
-            bool closeConcolse = true;
+
+            //完整指令的
+            /*
+            for (int i = 0; i < _commandList.Count; i++)
+            {
+                CommandData cmd = _commandList[i];
+                if (command == cmd.cmd && !string.IsNullOrEmpty(cmd.format))
+                {
+                    _cacheList.Add(_commandList[i]);
+                    commandExists = true;
+                }
+            }
+            */
 
             if (commandExists==false)
             {
-                for (int i = 0; i < _commandList.Count; i++)
+                for (int i = 0; i < m_CommandList.Count; i++)
                 {
-                    CommandData cmd = _commandList[i];
+                    CommandData cmd = m_CommandList[i];
                     if (cmd.cmd == strArray[0])
                     {
                         if (args.Count == cmd.argsCount + 1)
@@ -224,8 +376,33 @@ namespace Commander
             }
             if(commandExists==false)
             {
-                this.AddLog(string.Format("\"{0}\" command not exists or args count not match", cmdText), LogType.Warning);
-                result = false;
+                if(cmdText.Contains("$$"))
+                {
+                    //this.AddLog("前端Lua指令 = " + command);
+                    //GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("前端Lua指令 = " + command);
+                    /*
+                    cmdText = cmdText.Replace("$$", "");
+                    GameEntry.Lua.CallLuaGM(cmdText);
+                    GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("已执行"));
+                    this.AddLog(cmdText);
+                    */
+                }
+                else
+                {
+                    //this.AddLog(string.Format("\"{0}\" 没有配置 或参数个数不匹配", command), LogType.Warning);
+                    //this.AddLog("已发送~~~");
+                    //-----------------------------手动输入GM指令----------------------------------
+                    /*
+                    CGGMCommand request = ReferencePool.Acquire<CGGMCommand>();
+                    cmdText = FormateParams(cmdText);
+                    string gmCommand = cmdText;
+                    request.GMCommand = gmCommand;
+                    GameEntry.Network.Send(request);
+                    GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("已发送"));
+                    this.AddLog(cmdText);
+                    result = true;
+                    */
+                }
             }
             else
             {
@@ -240,23 +417,22 @@ namespace Commander
                 if(targetCmd != null)
                 {
                     result = targetCmd.Method(args);
-                    closeConcolse = targetCmd.closeConcole;
-                    if(!result)
-                    {
-                        this.AddLog(string.Format("Excute \"{0}\" failed", cmdText), LogType.Warning);
+                    if(result)
+					{
+                        this.AddLog(cmdText);
                     }
                 }
             }
             if(!result)
             {
-                closeConcolse = false;
+                //this.AddLog(string.Format("\"{0}\"执行失败", command), LogType.Warning);
             }
             else
             {
                 this.AddHistoryCommand(cmdText);
             }
             _cacheList.Clear();
-            return closeConcolse;
+            return result;
         }
 
         private void AddHistoryCommand(string command)
@@ -274,6 +450,32 @@ namespace Commander
             _historyIndex = -1;
         }
 
+        private string FormateParams(string command)
+		{
+            command = command.Trim();
+            if(string.IsNullOrEmpty(command))
+			{
+                return command;
+			}
+            if (command.Contains("="))
+			{
+                return command;
+			}
+            //int index = command.IndexOf(" ");
+
+            for (int index = 0; index < command.Length;  index++)
+            {
+                if(index>0 && index < command.Length-1)
+				{
+					if (command[index].ToString() == " " && command[index+1].ToString()!="=")
+					{
+                        command = command.Insert(index+1, "=");
+                    }
+				}
+                
+            }
+				return command;
+        }
         private string GetCurrentCommand()
         {
             if(_historyList.Count == 0)
@@ -317,9 +519,9 @@ namespace Commander
         public List<CommandData> GetFilterList(string command)
         {
             tmpList.Clear();
-            for (int i = 0; i < _commandList.Count; i++)
+            for (int i = 0; i < m_CommandList.Count; i++)
             {
-                CommandData cmd = _commandList[i];
+                CommandData cmd = m_CommandList[i];
                 if(cmd.cmd.Contains(command))
                 {
                     tmpList.Add(cmd);
