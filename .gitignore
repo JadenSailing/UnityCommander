@@ -2,6 +2,7 @@
 ## Unity3D
 #################
 .vs/
+obj/
 Library/
 Temp/
 Assets/UnityVS/
