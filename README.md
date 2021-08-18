@@ -6,4 +6,4 @@ add command component to scene
 ![image](https://github.com/JadenSailing/UnityCommander/blob/master/Doc/Component.png)
 
 
-![image](https://github.com/JadenSailing/UnityCommander/blob/master/Doc/line.png)
+![image](https://github.com/JadenSailing/UnityCommander/blob/master/Doc/Command.png)
