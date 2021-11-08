@@ -1,10 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Commander
 {
-    //添加此脚本至场景即可使用
+    /*
+     * 添加此脚本至场景即可使用
+     * 测试的部分指令是本项目自用的 无效可忽略
+     * 注意多数指令都是需要发往服务器的
+       故需要自己在CommandManager下面三个方法中补充TODO部分
+        RegisterDefaultCommands
+        RegisterAllCommands
+        ExecuteCommand
+        */
     public class Commander : MonoBehaviour
     {
         public enum State
@@ -73,9 +80,12 @@ namespace Commander
             }
             InitUI();
 
+            //此处是CommandList里带标签的自定义Command
             CommandManager.Instance.RegisterDefaultCommands();
+            //此处是GMCommand.txt里定义的Command
             CommandManager.Instance.RegisterAllCommands();
-            //CommandManager.Instance.RegisterCommandsGroup();
+            //此处是组Command，用于批量执行 提了个测试模板 一般用于批量发送服务器的Command
+            CommandManager.Instance.RegisterCommandsGroup();
             command_text = "";
             cached_command_text = command_text;
         }

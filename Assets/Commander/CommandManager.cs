@@ -146,7 +146,7 @@ namespace Commander
 
         public void RegisterCommandsGroup()
         {
-            string path = Application.dataPath + "/GameMain/LauncherAssets/GMCommandGroup.txt";
+            string path = Application.dataPath + "/Commander/GMCommandGroup.txt";
             string[] lines = File.ReadAllLines(path, Encoding.Unicode);
             string command = "";
             string comment = "";
@@ -191,33 +191,7 @@ namespace Commander
                     for (int index = 0; index < groupCommand.gmList.Count; index++)
                     {
                         //项目内批指令的处理
-                        /*
-                        CGGMCommand request = ReferencePool.Acquire<CGGMCommand>();
-                        string gmCommand = groupCommand.gmList[index];
-                        bool isValid = true;
-                        if (gmCommand.StartsWith("0"))
-                        {
-                            gmCommand = gmCommand.Substring(1);
-                            if (GameEntry.DataCache.Entity.MyPlayerCharacterData.Gender != 0)
-                            {
-                                isValid = false;
-                            }
-                        }
-                        if (gmCommand.StartsWith("1"))
-                        {
-                            gmCommand = gmCommand.Substring(1);
-                            if (GameEntry.DataCache.Entity.MyPlayerCharacterData.Gender != 1)
-                            {
-                                isValid = false;
-                            }
-                        }
-
-                        request.GMCommand = gmCommand;
-                        if (isValid)
-                        {
-                            GameEntry.Network.Send(request);
-                        }
-                        */
+                        //TODO:此处是项目内发往服务器的处理
                     }
                 }
                 return true;
@@ -249,26 +223,7 @@ namespace Commander
                 Func<List<string>, bool> callbackGM = (List<string> argsList) =>
                 {
                     //项目内发往服务器的指令
-                    /*
-                    CGGMCommand request = ReferencePool.Acquire<CGGMCommand>();
-                    string gmCommand = command;
-                    if(string.IsNullOrEmpty(formatStr))
-                    {
-                        gmCommand = command;
-                    }
-                    else
-                    {
-                        gmCommand = formatStr;
-                        string[] args = new string[maxArgsCount];
-                        for (int j = 0; j < args.Length; j++)
-                        {
-                            args[j] = argsList[j + 1];
-                        }
-                        gmCommand = string.Format(formatStr, args);
-                    }
-                    request.GMCommand = gmCommand;
-                    GameEntry.Network.Send(request);
-                    */
+                    //TODO:此处是项目内发往服务器的处理
                     return true;
                 };
 
@@ -379,29 +334,14 @@ namespace Commander
                 if(cmdText.Contains("$$"))
                 {
                     //this.AddLog("前端Lua指令 = " + command);
-                    //GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("前端Lua指令 = " + command);
-                    /*
-                    cmdText = cmdText.Replace("$$", "");
-                    GameEntry.Lua.CallLuaGM(cmdText);
-                    GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("已执行"));
-                    this.AddLog(cmdText);
-                    */
+                    //TODO:此处是为了方便在Lua层扩展加的处理 不用lua可不用管
                 }
                 else
                 {
                     //this.AddLog(string.Format("\"{0}\" 没有配置 或参数个数不匹配", command), LogType.Warning);
                     //this.AddLog("已发送~~~");
                     //-----------------------------手动输入GM指令----------------------------------
-                    /*
-                    CGGMCommand request = ReferencePool.Acquire<CGGMCommand>();
-                    cmdText = FormateParams(cmdText);
-                    string gmCommand = cmdText;
-                    request.GMCommand = gmCommand;
-                    GameEntry.Network.Send(request);
-                    GameEntry.Event.Fire(this, ReferencePool.Acquire<ShowToastEventArgs>().Fill("已发送"));
-                    this.AddLog(cmdText);
-                    result = true;
-                    */
+                    //TODO:此处是项目内发往服务器的处理
                 }
             }
             else

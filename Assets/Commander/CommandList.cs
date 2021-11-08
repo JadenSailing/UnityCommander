@@ -39,7 +39,7 @@ namespace Commander
 		static bool SystemCommand_Help(List<string> args)
 		{
 			CommandManager.Instance.AddLog("帮助说明:");
-			CommandManager.Instance.AddLog("GM 指令，可在 Assets/GameMain/LauncherAssets/GMCommand.txt 配置");
+			CommandManager.Instance.AddLog("GM 指令，可在 Assets/Commander/GMCommand.txt 配置");
 			CommandManager.Instance.AddLog("\"~\"控制台开关，ESC也可以关闭控制台");
 			CommandManager.Instance.AddLog("Tab键或者↑↓箭头可以切换待选列表，然后Enter键选中");
 			CommandManager.Instance.AddLog("无待选列表时↑↓箭头可以切换历史命令");
