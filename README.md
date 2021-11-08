@@ -13,7 +13,9 @@ add command component to scene
 
 2 交互方便 部分高亮匹配，上下箭头或Tab可自由选择，自动补全，回车可确认
 
-3 反正我不喜欢Debug面板之类点按钮的调试方式！
+3 使用UnityGUI原生接口，可以高于弹出界面等，方便各种情况下的调试
+
+ps 反正我不喜欢Debug面板之类点按钮的调试方式！所以找了个GUI原生插件 然后做了一定的优化自用！
 
 
 ![image](https://github.com/JadenSailing/UnityCommander/blob/master/Doc/Component.png)
