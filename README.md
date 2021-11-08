@@ -15,6 +15,8 @@ add command component to scene
 
 3 使用UnityGUI原生接口，可以高于弹出界面等，方便各种情况下的调试
 
+4 扩展方便 支持C#内自定义Command，单独的外部文件配置和批指令，实践结果觉得很方便
+
 ps 反正我不喜欢Debug面板之类点按钮的调试方式！所以找了个GUI原生插件 然后做了一定的优化自用！
 
 
